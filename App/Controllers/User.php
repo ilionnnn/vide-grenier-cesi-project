@@ -10,7 +10,7 @@ use App\Utility\Session;
 use \Core\View;
 use Exception;
 use http\Env\Request;
-use http\Exception\InvalidArgumentException;
+// use http\Exception\InvalidArgumentException; // Removed, use built-in instead
 
 /**
  * User controller
@@ -47,7 +47,7 @@ class User extends \Core\Controller
 
             if($f['password'] !== $f['password-check']){
                 // TODO: Gestion d'erreur côté utilisateur
-                throw new InvalidArgumentException('Les mots de passe ne correspondent pas.');
+                throw new \InvalidArgumentException('Les mots de passe ne correspondent pas.');
             }
              // 1. Créer l'utilisateur et récupérer son ID
         $userID = $this->register($f);
@@ -70,24 +70,13 @@ class User extends \Core\Controller
             $this->register($f);
             // TODO: Rappeler la fonction de login pour connecter l'utilisateur
         } else {
-            loginAction(); 
+            $this->loginAction(); 
         }
 
         View::renderTemplate('User/register.html');
     }
-
-    /**
-     * Affiche la page du compte
-     */
-    public function accountAction()
-    {
-        $articles = Articles::getByUser($_SESSION['user']['id']);
-
-        View::renderTemplate('User/account.html', [
-            'articles' => $articles
-        ]);
-    }
-
+}
+        
     /*
      * Fonction privée pour enregister un utilisateur
      */
@@ -111,6 +100,17 @@ class User extends \Core\Controller
             // TODO : Set flash if error : utiliser la fonction en dessous
             /* Utility\Flash::danger($ex->getMessage());*/
         }
+    }
+  /**
+     * Affiche la page du compte
+     */
+    public function accountAction()
+    {
+        $articles = Articles::getByUser($_SESSION['user']['id']);
+
+        View::renderTemplate('User/account.html', [
+            'articles' => $articles
+        ]);
     }
 
     private function login($data){

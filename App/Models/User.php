@@ -2,65 +2,72 @@
 
 namespace App\Models;
 
-use App\Utility\Hash;
 use Core\Model;
-use App\Core;
 use Exception;
-use App\Utility;
 
-/**
- * User Model:
- */
-class User extends Model {
-
+class User extends Model
+{
     /**
-     * Crée un utilisateur
+     * Récupère un utilisateur par son ID
      */
-    public static function createUser($data) {
-        $db = static::getDB();
-
-        $stmt = $db->prepare('INSERT INTO users(username, email, password, salt) VALUES (:username, :email, :password,:salt)');
-
-        $stmt->bindParam(':username', $data['username']);
-        $stmt->bindParam(':email', $data['email']);
-        $stmt->bindParam(':password', $data['password']);
-        $stmt->bindParam(':salt', $data['salt']);
-
-        $stmt->execute();
-
-        return $db->lastInsertId();
-    }
-
-    public static function getByLogin($login)
+    public static function getById($id)
     {
         $db = static::getDB();
-
-        $stmt = $db->prepare("
-            SELECT * FROM users WHERE ( users.email = :email) LIMIT 1
-        ");
-
-        $stmt->bindParam(':email', $login);
-        $stmt->execute();
-
+        $stmt = $db->prepare('SELECT * FROM users WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $id]);
         return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
-
     /**
-     * ?
-     * @access public
-     * @return string|boolean
-     * @throws Exception
+     * Récupère un utilisateur par son email (pour le login)
      */
-    public static function login() {
+    public static function getByLogin($email)
+    {
         $db = static::getDB();
-
-        $stmt = $db->prepare('SELECT * FROM articles WHERE articles.id = ? LIMIT 1');
-
-        $stmt->execute([$id]);
-
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $stmt = $db->prepare('SELECT * FROM users WHERE email = :email LIMIT 1');
+        $stmt->execute([':email' => $email]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Crée un nouvel utilisateur
+     */
+    public static function createUser($data)
+    {
+        $db = static::getDB();
+        $stmt = $db->prepare('
+            INSERT INTO users (email, username, password, salt)
+            VALUES (:email, :username, :password, :salt)
+        ');
+        $stmt->execute([
+            ':email' => $data['email'],
+            ':username' => $data['username'],
+            ':password' => $data['password'],
+            ':salt' => $data['salt']
+        ]);
+        return $db->lastInsertId();
+    }
 
+    /**
+     * Stocke le token "remember me" pour l'utilisateur
+     */
+    public static function storeRememberToken($userId, $token)
+    {
+        $db = static::getDB();
+        $stmt = $db->prepare("UPDATE users SET remember_token = :token WHERE id = :id");
+        $stmt->execute([
+            ':token' => $token,
+            ':id' => $userId
+        ]);
+    }
+
+    /**
+     * Supprime le token "remember me" (optionnel, pour logout)
+     */
+    public static function deleteRememberToken($token)
+    {
+        $db = static::getDB();
+        $stmt = $db->prepare("UPDATE users SET remember_token = NULL WHERE remember_token = :token");
+        $stmt->execute([':token' => $token]);
+    }
 }
