@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  php-apache:
+    build:
+      context: ./docker/web
+      dockerfile: Dockerfile
+    ports:
+      - "8090:80"
+    depends_on:
+      - db
+    networks:
+      - monreseau
+
+  db:
+    image: mariadb:10.5
+    container_name: mariadb-prod
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mon_site
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - monreseau
+
+volumes:
+  mariadb_data:
+
+networks:
+  monreseau:
