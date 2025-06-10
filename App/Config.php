@@ -39,4 +39,12 @@ class Config
      * @var boolean
      */
     const SHOW_ERRORS = true;
+
+     public static function get($key) {
+        $const = __CLASS__ . '::' . $key;
+        if (defined($const)) {
+            return constant($const);
+        }
+        return null;
+    }
 }

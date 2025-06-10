@@ -1,6 +1,7 @@
 <?php
 
-namespace App\Helpers;
+namespace App\Helper;
+
 
 class Cookie
 {

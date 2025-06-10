@@ -7,6 +7,7 @@ use App\Model\UserRegister;
 use App\Models\Articles;
 use App\Utility\Hash;
 use App\Utility\Session;
+use App\Helper\Cookie;
 use \Core\View;
 use Exception;
 
@@ -24,7 +25,6 @@ public function loginAction()
 {
     if(isset($_POST['submit'])){
         $f = $_POST;
-        // TODO: Validation
         $loginOk = $this->login($f);
 
         if ($loginOk) {
@@ -32,10 +32,13 @@ public function loginAction()
             exit;
         } else {
             View::renderTemplate('User/login.html'); 
+            return;
         }
     }
-    ;
+    // Affiche la vue si GET ou si POST sans succès
+    View::renderTemplate('User/login.html');
 }
+
 
 
     /**
@@ -87,7 +90,7 @@ public function loginAction()
             return $userID;
 
         } catch (Exception $ex) {
-            Utility\Flash::danger($ex->getMessage());
+           // Utility\Flash::danger($ex->getMessage());
             return false;
         }
     }
@@ -95,45 +98,74 @@ public function loginAction()
     /**
      * Affiche la page du compte
      */
-    public function accountAction()
-    {
-        $articles = Articles::getByUser($_SESSION['user']['id']);
+public function accountAction()
+{
+    $user = $_SESSION['user'];
+    $articles = Articles::getByUser($user['id']);
 
-        View::renderTemplate('User/account.html', [
-            'articles' => $articles
-        ]);
-    }
+    View::renderTemplate('User/account.html', [
+        'user' => $user,
+        'articles' => $articles
+    ]);
+}
 
-    private function login($data){
-        try {
-            if(!isset($data['email'])){
-                throw new Exception('TODO');
-            }
 
-            $user = \App\Models\User::getByLogin($data['email']);
 
-            if (Hash::generate($data['password'], $user['salt']) !== $user['password']) {
-                return false;
-            }
-            if (isset($data['remember_me'])) {
-                $token = bin2hex(random_bytes(32));
-                \App\Models\User::storeRememberToken($user['id'], $token);
-                setcookie('remember_me', $token, time() + 3600 * 24 * 30, '/', '', false, true);
-            }
-
-            $_SESSION['user'] = array(
-                'id' => $user['id'],
-                'username' => $user['username'],
-            );
-
-            return true;
-
-        } catch (Exception $ex) {
-            // TODO : Set flash if error
-            /* Utility\Flash::danger($ex->getMessage());*/
+private function login($data) {
+    try {
+        if (empty($data['email']) || empty($data['password'])) {
             return false;
         }
+        $user = \App\Models\User::getByLogin($data['email']);
+       
+if (!$user) {
+    var_dump('Utilisateur non trouvé');
+    exit;
+}
+if (Hash::generate($data['password'], $user['salt']) !== $user['password']) {
+    var_dump('Mot de passe incorrect');
+    var_dump('Password saisi:', $data['password']);
+var_dump('Salt utilisé:', $user['salt']);
+var_dump('Hash attendu:', $user['password']);
+var_dump('Hash calculé:', Hash::generate($data['password'], $user['salt']));
+
+exit;
+
+    exit;
+}
+
+        if (!$user) return false;
+        if (Hash::generate($data['password'], $user['salt']) !== $user['password']) return false;
+
+       $_SESSION['user'] = [
+    'id' => $user['id'],
+    'username' => $user['username'],
+];
+var_dump($_SESSION); exit;
+
+
+        // Se souvenir de moi
+        if (!empty($data['remember_me'])) {
+            $token = bin2hex(random_bytes(32));
+            \App\Models\User::storeRememberToken($user['id'], $token);
+            setcookie('remember_me', $token, [
+                'expires' => time() + 3600 * 24 * 30,
+                'path' => '/',
+                'secure' => false,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+        }
+
+        // Force la sauvegarde de la session avant redirection (optionnel)
+        session_write_close();
+        return true;
+    } catch (Exception $ex) {
+        return false;
     }
+}
+
+
 
     /**
      * Logout: Delete cookie and session. Returns true if everything is okay,
@@ -142,28 +174,32 @@ public function loginAction()
      * @return boolean
      * @since 1.0.2
      */
-    public function logoutAction() {
-        // Supprimer le cookie "remember me"
-        if (isset($_COOKIE['remember_me'])) {
-            unset($_COOKIE['remember_me']);
-            setcookie('remember_me', '', time() - 3600, '/');
-            // Supprime aussi le token en base si besoin
-            // \App\Models\User::deleteRememberToken($_COOKIE['remember_me']);
-        }
+ public function logoutAction() {
 
+        // Delete the cookie if it exists.
+     if (Cookie::exists(Config::get("COOKIE_USER"))) {
+    Cookie::delete(Config::get("COOKIE_USER"));
+}
+
+        // Destroy all data registered to the session.
         $_SESSION = array();
-
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params["path"],
+                $params["domain"],
+                $params["secure"],
+                $params["httponly"]
             );
         }
 
         session_destroy();
 
         header ("Location: /");
+
         return true;
     }
 

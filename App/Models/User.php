@@ -21,15 +21,16 @@ class User extends Model
     /**
      * Récupère un utilisateur par son email (pour le login)
      */
-    public static function getByLogin($email)
-    {
-        return [
-            'id' => 1,
-            'username' => 'testuser',
-            'salt' => 'abc123', 
-            'password' => \App\Utility\Hash::generate('password123', 'abc123'),
-        ];
-    }
+ public static function getByLogin($email)
+{
+    return [
+        'id' => 1,
+        'username' => 'testuser',
+        'salt' => 'abc123', 
+        'password' => \App\Utility\Hash::generate('password', 'abc123'), 
+    ];
+}
+
 
     /**
      * Crée un nouvel utilisateur
@@ -57,6 +58,7 @@ public static function createUser($data)
         ':email' => $data['email'],
         ':username' => $data['username'],
         ':password' => $data['password'],
+
         ':salt' => $data['salt']
     ]);
     return $db->lastInsertId();
