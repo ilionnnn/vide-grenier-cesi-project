@@ -6,7 +6,7 @@ use Core\Model;
 use App\Core;
 use DateTime;
 use Exception;
-use App\Utility;
+use App\Helpers;
 
 /**
  * Articles Model
@@ -28,7 +28,7 @@ class Articles extends Model {
             case 'views':
                 $query .= ' ORDER BY articles.views DESC';
                 break;
-            case 'data':
+            case 'date':
                 $query .= ' ORDER BY articles.published_date DESC';
                 break;
             case '':
@@ -70,7 +70,7 @@ class Articles extends Model {
         $db = static::getDB();
 
         $stmt = $db->prepare('
-            UPDATE articles 
+            UPDATE articles
             SET articles.views = articles.views + 1
             WHERE articles.id = ?');
 
@@ -105,13 +105,13 @@ class Articles extends Model {
     public static function getSuggest() {
         $db = static::getDB();
 
+        
         $stmt = $db->prepare('
             SELECT *, articles.id as id FROM articles
             INNER JOIN users ON articles.user_id = users.id
             ORDER BY published_date DESC LIMIT 10');
 
         $stmt->execute();
-
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 

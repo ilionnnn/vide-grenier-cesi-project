@@ -100,11 +100,10 @@ public function loginAction()
      */
 public function accountAction()
 {
-    $user = $_SESSION['user'];
-    $articles = Articles::getByUser($user['id']);
+    var_dump($user, $articles); exit;
 
+    $articles = Articles::getByUser($_SESSION['user']['id']);
     View::renderTemplate('User/account.html', [
-        'user' => $user,
         'articles' => $articles
     ]);
 }
@@ -128,8 +127,6 @@ if (Hash::generate($data['password'], $user['salt']) !== $user['password']) {
 var_dump('Salt utilisé:', $user['salt']);
 var_dump('Hash attendu:', $user['password']);
 var_dump('Hash calculé:', Hash::generate($data['password'], $user['salt']));
-
-exit;
 
     exit;
 }
