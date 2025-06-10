@@ -2,15 +2,16 @@
 
 namespace App\Controllers;
 
-use App\Config;
+use App\Helpers\Config;
 use App\Model\UserRegister;
 use App\Models\Articles;
-use App\Utility\Hash;
-use App\Utility\Session;
+use App\Helpers\Hash;
+use App\Helpers\Cookie;
+use App\Helpers\Session;
 use \Core\View;
 use Exception;
 use http\Env\Request;
-// use http\Exception\InvalidArgumentException; // Removed, use built-in instead
+use http\Exception\InvalidArgumentException;
 
 /**
  * User controller
@@ -47,36 +48,32 @@ class User extends \Core\Controller
 
             if($f['password'] !== $f['password-check']){
                 // TODO: Gestion d'erreur côté utilisateur
-                throw new \InvalidArgumentException('Les mots de passe ne correspondent pas.');
             }
-             // 1. Créer l'utilisateur et récupérer son ID
-        $userID = $this->register($f);
 
-        if ($userID) {
-            // 2. Récupérer l'utilisateur depuis la base
-            $user = \App\Models\User::getById($userID);
-
-            // 3. Initialiser la session comme lors du login
-            $_SESSION['user'] = [
-                'id' => $user['id'],
-                'username' => $user['username'],
-            ];
-
-            // 4. Rediriger vers la page de compte
-            header('Location: /account');
-            exit;
             // validation
 
             $this->register($f);
-            // TODO: Rappeler la fonction de login pour connecter l'utilisateur
-        } else {
-            $this->loginAction(); 
+            $this->login($f);
+
+            // Si login OK, redirige vers le compte
+            header('Location: /account');
         }
 
         View::renderTemplate('User/register.html');
     }
-}
-        
+
+    /**
+     * Affiche la page du compte
+     */
+    public function accountAction()
+    {
+        $articles = Articles::getByUser($_SESSION['user']['id']);
+
+        View::renderTemplate('User/account.html', [
+            'articles' => $articles
+        ]);
+    }
+
     /*
      * Fonction privée pour enregister un utilisateur
      */
@@ -98,24 +95,13 @@ class User extends \Core\Controller
 
         } catch (Exception $ex) {
             // TODO : Set flash if error : utiliser la fonction en dessous
-            /* Utility\Flash::danger($ex->getMessage());*/
+            /* Helpers\Flash::danger($ex->getMessage());*/
         }
     }
-  /**
-     * Affiche la page du compte
-     */
-    public function accountAction()
-    {
-        $articles = Articles::getByUser($_SESSION['user']['id']);
 
-        View::renderTemplate('User/account.html', [
-            'articles' => $articles
-        ]);
-    }
-
-    private function login($data){
+    private function login($data) {
         try {
-            if(!isset($data['email'])){
+            if (!isset($data['email'])) {
                 throw new Exception('TODO');
             }
 
@@ -124,19 +110,11 @@ class User extends \Core\Controller
             if (Hash::generate($data['password'], $user['salt']) !== $user['password']) {
                 return false;
             }
-            if (isset($data['remember_me'])) {
-            // Créer un token unique (par exemple, un hash)
-            $token = bin2hex(random_bytes(32));
-
-            // Stocker ce token en base de données, associé à l'utilisateur
-            \App\Models\User::storeRememberToken($user['id'], $token);
-
-            // Créer le cookie persistant pour 30 jours
-            setcookie('remember_me', $token, time() + 3600 * 24 * 30, '/', '', false, true);
-}
-            // TODO: Create a remember me cookie if the user has selected the option
-            // to remained logged in on the login form.
-            // https://github.com/andrewdyer/php-mvc-register-login/blob/development/www/app/Model/UserLogin.php#L86
+            
+            if (isset($data['remember'])) {
+                $hash = Hash::generate( $user["id"], $user['salt']);
+                Cookie::put(Config::get("COOKIE_USER"), $hash, Config::get("COOKIE_DEFAULT_EXPIRY"));
+            }
 
             $_SESSION['user'] = array(
                 'id' => $user['id'],
@@ -147,10 +125,7 @@ class User extends \Core\Controller
 
         } catch (Exception $ex) {
             // TODO : Set flash if error
-            
-            /* Utility\Flash::danger($ex->getMessage());*/
-            return false;
-
+            /* Helpers\Flash::danger($ex->getMessage());*/
         }
     }
 
@@ -162,29 +137,32 @@ class User extends \Core\Controller
      * @return boolean
      * @since 1.0.2
      */
-public function logoutAction() {
-    // Supprimer le cookie "remember me"
-    if (isset($_COOKIE['remember_me'])) {
-        unset($_COOKIE['remember_me']);
-        setcookie('remember_me', '', time() - 3600, '/');
-        // Supprime aussi le token en base si besoin
-        // \App\Models\User::deleteRememberToken($_COOKIE['remember_me']);
+    public function logoutAction() {
+
+        // Delete the cookie if it exists.
+        if (Cookie::exists(Config::get("COOKIE_USER"))){
+            Cookie::delete(Config::get("COOKIE_USER"));
+        }
+
+        // Destroy all data registered to the session.
+        $_SESSION = array();
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params["path"],
+                $params["domain"],
+                $params["secure"],
+                $params["httponly"]
+            );
+        }
+
+        session_destroy();
+
+        header ("Location: /");
+
+        return true;
     }
-
-    $_SESSION = array();
-
-    if (ini_get("session.use_cookies")) {
-        $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-            $params["path"], $params["domain"],
-            $params["secure"], $params["httponly"]
-        );
-    }
-
-    session_destroy();
-
-    header ("Location: /");
-    return true;
-}
-
 }
