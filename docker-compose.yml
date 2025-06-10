@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   php-apache:
     build:
@@ -14,6 +12,8 @@ services:
 
   db:
     image: mariadb:10.5
+    ports:
+      - "3306:3306"
     container_name: mariadb-prod
     restart: always
     environment:
@@ -25,6 +25,24 @@ services:
       - mariadb_data:/var/lib/mysql
     networks:
       - monreseau
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "8082:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - PMA_ARBITRARY=0
+      - UPLOAD_LIMIT=32M
+    depends_on:
+      - db
+    networks:
+      - monreseau
+    volumes:
+      - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
 
 volumes:
   mariadb_data:

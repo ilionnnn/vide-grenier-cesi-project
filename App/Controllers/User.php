@@ -2,16 +2,14 @@
 
 namespace App\Controllers;
 
-use App\Helpers\Config;
+use App\Config;
 use App\Model\UserRegister;
 use App\Models\Articles;
-use App\Helpers\Hash;
-use App\Helpers\Cookie;
-use App\Helpers\Session;
+use App\Utility\Hash;
+use App\Utility\Session;
+use App\Helper\Cookie;
 use \Core\View;
 use Exception;
-use http\Env\Request;
-use http\Exception\InvalidArgumentException;
 
 /**
  * User controller
@@ -22,21 +20,26 @@ class User extends \Core\Controller
     /**
      * Affiche la page de login
      */
-    public function loginAction()
-    {
-        if(isset($_POST['submit'])){
-            $f = $_POST;
 
-            // TODO: Validation
+public function loginAction()
+{
+    if(isset($_POST['submit'])){
+        $f = $_POST;
+        $loginOk = $this->login($f);
 
-            $this->login($f);
-
-            // Si login OK, redirige vers le compte
+        if ($loginOk) {
             header('Location: /account');
+            exit;
+        } else {
+            View::renderTemplate('User/login.html'); 
+            return;
         }
-
-        View::renderTemplate('User/login.html');
     }
+    // Affiche la vue si GET ou si POST sans succès
+    View::renderTemplate('User/login.html');
+}
+
+
 
     /**
      * Page de création de compte
@@ -47,41 +50,34 @@ class User extends \Core\Controller
             $f = $_POST;
 
             if($f['password'] !== $f['password-check']){
-                // TODO: Gestion d'erreur côté utilisateur
+                throw new \InvalidArgumentException('Les mots de passe ne correspondent pas.');
             }
 
-            // validation
+            $userID = $this->register($f);
 
-            $this->register($f);
-            $this->login($f);
-
-            // Si login OK, redirige vers le compte
-            header('Location: /account');
+            if ($userID) {
+                $user = \App\Models\User::getById($userID);
+                $_SESSION['user'] = [
+                    'id' => $user['id'],
+                    'username' => $user['username'],
+                ];
+                header('Location: /account');
+                exit;
+            } else {
+                $this->loginAction();
+                return;
+            }
         }
-
+        // Affiche toujours le formulaire si GET ou si POST sans succès
         View::renderTemplate('User/register.html');
     }
 
-    /**
-     * Affiche la page du compte
-     */
-    public function accountAction()
-    {
-        $articles = Articles::getByUser($_SESSION['user']['id']);
-
-        View::renderTemplate('User/account.html', [
-            'articles' => $articles
-        ]);
-    }
-
     /*
-     * Fonction privée pour enregister un utilisateur
+     * Fonction privée pour enregistrer un utilisateur
      */
     private function register($data)
     {
         try {
-            // Generate a salt, which will be applied to the during the password
-            // hashing process.
             $salt = Hash::generateSalt(32);
 
             $userID = \App\Models\User::createUser([
@@ -94,40 +90,77 @@ class User extends \Core\Controller
             return $userID;
 
         } catch (Exception $ex) {
-            // TODO : Set flash if error : utiliser la fonction en dessous
-            /* Helpers\Flash::danger($ex->getMessage());*/
+           // Utility\Flash::danger($ex->getMessage());
+            return false;
         }
     }
 
-    private function login($data) {
-        try {
-            if (!isset($data['email'])) {
-                throw new Exception('TODO');
-            }
+    /**
+     * Affiche la page du compte
+     */
+public function accountAction()
+{
+    var_dump($user, $articles); exit;
 
-            $user = \App\Models\User::getByLogin($data['email']);
+    $articles = Articles::getByUser($_SESSION['user']['id']);
+    View::renderTemplate('User/account.html', [
+        'articles' => $articles
+    ]);
+}
 
-            if (Hash::generate($data['password'], $user['salt']) !== $user['password']) {
-                return false;
-            }
-            
-            if (isset($data['remember'])) {
-                $hash = Hash::generate( $user["id"], $user['salt']);
-                Cookie::put(Config::get("COOKIE_USER"), $hash, Config::get("COOKIE_DEFAULT_EXPIRY"));
-            }
 
-            $_SESSION['user'] = array(
-                'id' => $user['id'],
-                'username' => $user['username'],
-            );
 
-            return true;
-
-        } catch (Exception $ex) {
-            // TODO : Set flash if error
-            /* Helpers\Flash::danger($ex->getMessage());*/
+private function login($data) {
+    try {
+        if (empty($data['email']) || empty($data['password'])) {
+            return false;
         }
+        $user = \App\Models\User::getByLogin($data['email']);
+       
+if (!$user) {
+    var_dump('Utilisateur non trouvé');
+    exit;
+}
+if (Hash::generate($data['password'], $user['salt']) !== $user['password']) {
+    var_dump('Mot de passe incorrect');
+    var_dump('Password saisi:', $data['password']);
+var_dump('Salt utilisé:', $user['salt']);
+var_dump('Hash attendu:', $user['password']);
+var_dump('Hash calculé:', Hash::generate($data['password'], $user['salt']));
+
+    exit;
+}
+
+        if (!$user) return false;
+        if (Hash::generate($data['password'], $user['salt']) !== $user['password']) return false;
+
+       $_SESSION['user'] = [
+    'id' => $user['id'],
+    'username' => $user['username'],
+];
+
+
+        // Se souvenir de moi
+        if (!empty($data['remember_me'])) {
+            $token = bin2hex(random_bytes(32));
+            \App\Models\User::storeRememberToken($user['id'], $token);
+            setcookie('remember_me', $token, [
+                'expires' => time() + 3600 * 24 * 30,
+                'path' => '/',
+                'secure' => false,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+        }
+
+        // Force la sauvegarde de la session avant redirection (optionnel)
+        session_write_close();
+        return true;
+    } catch (Exception $ex) {
+        return false;
     }
+}
+
 
 
     /**
@@ -137,12 +170,12 @@ class User extends \Core\Controller
      * @return boolean
      * @since 1.0.2
      */
-    public function logoutAction() {
+ public function logoutAction() {
 
         // Delete the cookie if it exists.
-        if (Cookie::exists(Config::get("COOKIE_USER"))){
-            Cookie::delete(Config::get("COOKIE_USER"));
-        }
+     if (Cookie::exists(Config::get("COOKIE_USER"))) {
+    Cookie::delete(Config::get("COOKIE_USER"));
+}
 
         // Destroy all data registered to the session.
         $_SESSION = array();
@@ -165,4 +198,5 @@ class User extends \Core\Controller
 
         return true;
     }
+
 }
