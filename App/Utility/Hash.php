@@ -27,6 +27,16 @@ class Hash {
     }
 
     /**
+     * Vérifie si le hash correspond à la chaîne de caractères et au sel
+     */
+    
+    public static function check($string, $salt, $hash)
+{
+    return self::generate($string, $salt) === $hash;
+}
+
+
+    /**
      * Génère et retourne un UID
      */
     public static function generateUnique() {

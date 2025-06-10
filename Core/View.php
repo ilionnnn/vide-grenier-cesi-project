@@ -2,6 +2,10 @@
 
 namespace Core;
 
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
+use Twig\Extension\DebugExtension;
+
 /**
  * View
  *
@@ -65,4 +69,5 @@ class View
 
         return $args;
     }
+    
 }

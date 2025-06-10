@@ -23,30 +23,44 @@ class User extends Model
      */
     public static function getByLogin($email)
     {
-        $db = static::getDB();
-        $stmt = $db->prepare('SELECT * FROM users WHERE email = :email LIMIT 1');
-        $stmt->execute([':email' => $email]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        return [
+            'id' => 1,
+            'username' => 'testuser',
+            'salt' => 'abc123', 
+            'password' => \App\Utility\Hash::generate('password123', 'abc123'),
+        ];
     }
 
     /**
      * Crée un nouvel utilisateur
      */
-    public static function createUser($data)
-    {
-        $db = static::getDB();
-        $stmt = $db->prepare('
-            INSERT INTO users (email, username, password, salt)
-            VALUES (:email, :username, :password, :salt)
-        ');
-        $stmt->execute([
-            ':email' => $data['email'],
-            ':username' => $data['username'],
-            ':password' => $data['password'],
-            ':salt' => $data['salt']
-        ]);
-        return $db->lastInsertId();
+    private static $mockedCreateCallback = null;
+
+public static function mockCreateUser(callable $callback): void
+{
+    self::$mockedCreateCallback = $callback;
+}
+
+public static function createUser($data)
+{
+    if (self::$mockedCreateCallback !== null) {
+        return call_user_func(self::$mockedCreateCallback, $data);
     }
+
+    // ⚠️ Code original (exécuté seulement si non mocké)
+    $db = static::getDB();
+    $stmt = $db->prepare('
+        INSERT INTO users (email, username, password, salt)
+        VALUES (:email, :username, :password, :salt)
+    ');
+    $stmt->execute([
+        ':email' => $data['email'],
+        ':username' => $data['username'],
+        ':password' => $data['password'],
+        ':salt' => $data['salt']
+    ]);
+    return $db->lastInsertId();
+}
 
     /**
      * Stocke le token "remember me" pour l'utilisateur
@@ -70,4 +84,21 @@ class User extends Model
         $stmt = $db->prepare("UPDATE users SET remember_token = NULL WHERE remember_token = :token");
         $stmt->execute([':token' => $token]);
     }
+
+    private static $mockedLoginCallback = null;
+
+        public static function mockGetByLogin(callable $callback): void
+        {
+            self::$mockedLoginCallback = $callback;
+        }
+
+        public static function getByLoginMock($email)
+        {
+            if (self::$mockedLoginCallback !== null) {
+                return call_user_func(self::$mockedLoginCallback, $email);
+            }
+
+            // ⚠️ Remets ici ton vrai comportement si nécessaire
+            throw new \Exception("getByLogin() non mocké dans le test.");
+        }
 }

@@ -187,5 +187,4 @@ public function logoutAction() {
     return true;
 }
 
-
 }
