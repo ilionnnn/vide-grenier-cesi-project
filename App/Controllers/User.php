@@ -42,10 +42,15 @@ class User extends \Core\Controller
      * Page de création de compte
      */
     public function registerAction()
-    {
-        if(isset($_POST['submit'])){
-            $f = $_POST;
+{
+    if(isset($_POST['submit'])){
+        $f = $_POST;
 
+        if($f['password'] !== $f['password-check']){
+            throw new \InvalidArgumentException('Les mots de passe ne correspondent pas.');
+        }
+
+<<<<<<< Updated upstream
             if($f['password'] !== $f['password-check']){
                 // TODO: Gestion d'erreur côté utilisateur
             }
@@ -57,10 +62,24 @@ class User extends \Core\Controller
 
             // Si login OK, redirige vers le compte
             header('Location: /account');
-        }
+=======
+        $userID = $this->register($f);
 
-        View::renderTemplate('User/register.html');
+        if ($userID) {
+            $user = \App\Models\User::getById($userID);
+            $_SESSION['user'] = [
+                'id' => $user['id'],
+                'username' => $user['username'],
+            ];
+            header('Location: /account');
+            exit;
+        } else {
+            $this->loginAction();
+            return;
+
+        }
     }
+
 
     /**
      * Affiche la page du compte
@@ -73,6 +92,13 @@ class User extends \Core\Controller
             'articles' => $articles
         ]);
     }
+
+
+    // Affiche toujours le formulaire si GET ou si POST sans succès
+    View::renderTemplate('User/register.html');
+}
+
+        
 
     /*
      * Fonction privée pour enregister un utilisateur
