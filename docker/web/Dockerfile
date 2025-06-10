@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 RUN a2enmod rewrite
 
 # Copier le code source dans le conteneur
-COPY ../../src/ /var/www/html/
+COPY . /var/www/html/
 
 # Donner les bons droits (optionnel)
 RUN chown -R www-data:www-data /var/www/html
