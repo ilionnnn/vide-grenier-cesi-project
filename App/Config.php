@@ -4,7 +4,7 @@ namespace App;
 
 class Config
 {
-    const DB_HOST = 'db';
+    const DB_HOST = 'localhost';
     const DB_NAME = 'mon_site';
     const DB_USER = 'user';
     const DB_PASSWORD = 'pass';
