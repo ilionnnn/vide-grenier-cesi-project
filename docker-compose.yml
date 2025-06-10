@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: docker/web/Dockerfile
     ports:
-      - "8081:80"
+      - "8090:80"
     depends_on:
       - db
     networks:
@@ -13,14 +13,14 @@ services:
   db:
     image: mariadb:10.5
     ports:
-      - "3306:3306"
-    container_name: mariadb-prod
+      - "3307:3307"
+    container_name: mariadb-prod-3307
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: mon_site
-      MYSQL_USER: user
-      MYSQL_PASSWORD: pass
+      MYSQL_DATABASE: mon_site_prod
+      MYSQL_USER: user_prod
+      MYSQL_PASSWORD: pass_prod
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
@@ -28,10 +28,10 @@ services:
 
   phpmyadmin:
     image: phpmyadmin
-    container_name: phpmyadmin
+    container_name: phpmyadmin-prod
     restart: always
     ports:
-      - "8082:80"
+      - "8092:80"
     environment:
       - PMA_HOST=db
       - PMA_PORT=3306
