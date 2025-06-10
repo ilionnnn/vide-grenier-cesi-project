@@ -5,7 +5,7 @@ Ce Readme.md est à destination des futurs repreneurs du site-web Vide Grenier e
 Title and Description
 Vide Grenier CESI Project est un projet développé dans le cadre des études au CESI, visant à créer une plateforme web pour organiser, gérer et rechercher des vide-greniers. Il permet aux utilisateurs de publier, consulter et gérer des annonces de vide-grenier, avec des fonctionnalités adaptées aux organisateurs et aux visiteurs.
 
-Features
+## Features
 Création et gestion de vide-greniers : Les organisateurs peuvent publier, modifier ou supprimer leurs annonces.
 
 Recherche de vide-greniers : Les visiteurs peuvent filtrer les vide-greniers par date, lieu, etc.
@@ -14,22 +14,25 @@ Gestion des utilisateurs : Inscription, connexion et profils personnalisés.
 
 Interface responsive : Accessible sur ordinateur, tablette et mobile.
 
-Installation
+## Installation
 Cloner le dépôt :
 
-bash
+```bash
 git clone https://github.com/ilionnnn/vide-grenier-cesi-project.git
 cd vide-grenier-cesi-project
-Installer les dépendances :
+```
+## Installer les dépendances :
 
-bash
+```bash
 composer install
 npm install
+```
+
 Configurer l’environnement :
 
 Créer un fichier .env à partir de .env.example et remplir les paramètres nécessaires.
 
-Lancer le serveur :
+## Lancer le serveur :
 
 bash
 php artisan serve
@@ -39,17 +42,18 @@ npm run dev
 Run Locally
 Pour lancer le projet en local :
 
-bash
+```bash
 php artisan serve
 npm run dev
 Accédez à l’application via http://localhost:8000.
+```
 
-Tech
+```Tech
 Backend : PHP
 Base de données : MySQL/PostgreSQL
 Serveur web : Apache/Nginx
 Outils : Docker pour le développement (configuration possible)
-
+```
 
 ## Mise en place du projet back-end
 
@@ -95,15 +99,10 @@ $db = static::getDB();
 
 ### Environment Variables
 DB_CONNECTION : Type de base de données
-
 DB_HOST : Adresse de la base de données
-
 DB_PORT : Port de la base de données
-
 DB_DATABASE : Nom de la base de données
-
 DB_USERNAME : Utilisateur de la base de données
-
 DB_PASSWORD : Mot de passe de la base de données
 
 ## Authors
