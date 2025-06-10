@@ -18,9 +18,9 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: mon_site
-      MYSQL_USER: user
-      MYSQL_PASSWORD: pass
+      MYSQL_DATABASE: mon_site_prod
+      MYSQL_USER: user_prod
+      MYSQL_PASSWORD: pass_prod
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
