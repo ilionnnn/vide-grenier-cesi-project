@@ -2,6 +2,10 @@
 
 namespace Core;
 
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
+use Twig\Extension\DebugExtension;
+
 /**
  * View
  *
@@ -44,7 +48,7 @@ class View
         static $twig = null;
 
         if ($twig === null) {
-            $loader = new \Twig\Loader\Filesystemloader(dirname(__DIR__) . '/App/Views');
+            $loader = new \Twig\Loader\FilesystemLoader(dirname(__DIR__) . '/App/Views');
             $twig = new \Twig\Environment($loader, ['debug' => true,]);
             $twig->addExtension(new \Twig\Extension\DebugExtension());
         }
@@ -52,7 +56,7 @@ class View
         echo $twig->render($template, View::setDefaultVariables($args));
     }
 
-
+ 
 
     /**
      * Ajoute les données à fournir à toutes les pages
@@ -65,4 +69,5 @@ class View
 
         return $args;
     }
+    
 }

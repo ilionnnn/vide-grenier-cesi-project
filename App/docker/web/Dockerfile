@@ -1,5 +1,6 @@
 FROM php:8.2-apache
 
+# Installer les extensions PHP nécessaires (pdo, mysqli, etc.)
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -9,12 +10,17 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && docker-php-ext-install pdo pdo_mysql mysqli
 
+# Activer mod_rewrite pour Apache (utile pour les frameworks MVC)
 RUN a2enmod rewrite
 
-COPY . /var/www/html/
-COPY apache.conf /etc/apache2/sites-available/000-default.conf
-RUN ls -la /var/www/html
-RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
-RUN echo "DirectoryIndex index.php" >> /etc/apache2/apache2.conf
+# Copier le code source dans le conteneur
+COPY ../../src/ /var/www/html/
 
-EXPOSE 81
+# Donner les bons droits (optionnel)
+RUN chown -R www-data:www-data /var/www/html
+
+# Configurer le DocumentRoot si besoin (optionnel)
+# ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+# RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+
+EXPOSE 80

@@ -2,6 +2,8 @@
 
 namespace Core;
 
+use App\Config;
+
 /**
  * Error and exception handler
  *

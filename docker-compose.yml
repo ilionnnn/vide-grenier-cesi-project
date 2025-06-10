@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
   php-apache:
     build:
       context: .
       dockerfile: docker/web/Dockerfile
     ports:
-      - "8090:80"
+      - "8081:80"
     depends_on:
       - db
     networks:
@@ -14,17 +12,37 @@ services:
 
   db:
     image: mariadb:10.5
+    ports:
+      - "3306:3306"
     container_name: mariadb-prod
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: mon_site_prod
-      MYSQL_USER: user_prod
-      MYSQL_PASSWORD: pass_prod
+      MYSQL_DATABASE: mon_site
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
       - monreseau
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "8082:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - PMA_ARBITRARY=0
+      - UPLOAD_LIMIT=32M
+    depends_on:
+      - db
+    networks:
+      - monreseau
+    volumes:
+      - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
 
 volumes:
   mariadb_data:

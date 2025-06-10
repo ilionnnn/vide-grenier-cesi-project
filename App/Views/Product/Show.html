@@ -29,7 +29,7 @@
             <p>{{article.description}}</p>
           </div>
           <div class="u-area mt-small">
-            <form action="/contact.php" method="post">
+            <form action="/contact" method="post">
               <input type="text" name="name" required placeholder="Votre nom" />
               <input
                 type="email"
@@ -42,7 +42,7 @@
                 required
                 placeholder="Votre message"
               ></textarea>
-              <button type="submit">Envoyer</button>
+              <button type="submit" name="submit">Envoyer</button>
             </form>
           </div>
         </div>

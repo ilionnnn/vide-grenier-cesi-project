@@ -7,10 +7,9 @@ use App\Model\UserRegister;
 use App\Models\Articles;
 use App\Utility\Hash;
 use App\Utility\Session;
+use App\Helper\Cookie;
 use \Core\View;
 use Exception;
-use http\Env\Request;
-// use http\Exception\InvalidArgumentException; // Removed, use built-in instead
 
 /**
  * User controller
@@ -21,21 +20,26 @@ class User extends \Core\Controller
     /**
      * Affiche la page de login
      */
-    public function loginAction()
-    {
-        if(isset($_POST['submit'])){
-            $f = $_POST;
 
-            // TODO: Validation
+public function loginAction()
+{
+    if(isset($_POST['submit'])){
+        $f = $_POST;
+        $loginOk = $this->login($f);
 
-            $this->login($f);
-
-            // Si login OK, redirige vers le compte
+        if ($loginOk) {
             header('Location: /account');
+            exit;
+        } else {
+            View::renderTemplate('User/login.html'); 
+            return;
         }
-
-        View::renderTemplate('User/login.html');
     }
+    // Affiche la vue si GET ou si POST sans succès
+    View::renderTemplate('User/login.html');
+}
+
+
 
     /**
      * Page de création de compte
@@ -46,45 +50,34 @@ class User extends \Core\Controller
             $f = $_POST;
 
             if($f['password'] !== $f['password-check']){
-                // TODO: Gestion d'erreur côté utilisateur
                 throw new \InvalidArgumentException('Les mots de passe ne correspondent pas.');
             }
-             // 1. Créer l'utilisateur et récupérer son ID
-        $userID = $this->register($f);
 
-        if ($userID) {
-            // 2. Récupérer l'utilisateur depuis la base
-            $user = \App\Models\User::getById($userID);
+            $userID = $this->register($f);
 
-            // 3. Initialiser la session comme lors du login
-            $_SESSION['user'] = [
-                'id' => $user['id'],
-                'username' => $user['username'],
-            ];
-
-            // 4. Rediriger vers la page de compte
-            header('Location: /account');
-            exit;
-            // validation
-
-            $this->register($f);
-            // TODO: Rappeler la fonction de login pour connecter l'utilisateur
-        } else {
-            $this->loginAction(); 
+            if ($userID) {
+                $user = \App\Models\User::getById($userID);
+                $_SESSION['user'] = [
+                    'id' => $user['id'],
+                    'username' => $user['username'],
+                ];
+                header('Location: /account');
+                exit;
+            } else {
+                $this->loginAction();
+                return;
+            }
         }
-
+        // Affiche toujours le formulaire si GET ou si POST sans succès
         View::renderTemplate('User/register.html');
     }
-}
-        
+
     /*
-     * Fonction privée pour enregister un utilisateur
+     * Fonction privée pour enregistrer un utilisateur
      */
     private function register($data)
     {
         try {
-            // Generate a salt, which will be applied to the during the password
-            // hashing process.
             $salt = Hash::generateSalt(32);
 
             $userID = \App\Models\User::createUser([
@@ -97,62 +90,76 @@ class User extends \Core\Controller
             return $userID;
 
         } catch (Exception $ex) {
-            // TODO : Set flash if error : utiliser la fonction en dessous
-            /* Utility\Flash::danger($ex->getMessage());*/
+           // Utility\Flash::danger($ex->getMessage());
+            return false;
         }
     }
-  /**
+
+    /**
      * Affiche la page du compte
      */
-    public function accountAction()
-    {
-        $articles = Articles::getByUser($_SESSION['user']['id']);
+public function accountAction()
+{
+    $articles = Articles::getByUser($_SESSION['user']['id']);
 
-        View::renderTemplate('User/account.html', [
-            'articles' => $articles
-        ]);
-    }
-
-    private function login($data){
-        try {
-            if(!isset($data['email'])){
-                throw new Exception('TODO');
-            }
-
-            $user = \App\Models\User::getByLogin($data['email']);
-
-            if (Hash::generate($data['password'], $user['salt']) !== $user['password']) {
-                return false;
-            }
-            if (isset($data['remember_me'])) {
-            // Créer un token unique (par exemple, un hash)
-            $token = bin2hex(random_bytes(32));
-
-            // Stocker ce token en base de données, associé à l'utilisateur
-            \App\Models\User::storeRememberToken($user['id'], $token);
-
-            // Créer le cookie persistant pour 30 jours
-            setcookie('remember_me', $token, time() + 3600 * 24 * 30, '/', '', false, true);
+    View::renderTemplate('User/account.html', [
+        'articles' => $articles
+    ]);
 }
-            // TODO: Create a remember me cookie if the user has selected the option
-            // to remained logged in on the login form.
-            // https://github.com/andrewdyer/php-mvc-register-login/blob/development/www/app/Model/UserLogin.php#L86
 
-            $_SESSION['user'] = array(
-                'id' => $user['id'],
-                'username' => $user['username'],
-            );
 
-            return true;
 
-        } catch (Exception $ex) {
-            // TODO : Set flash if error
-            
-            /* Utility\Flash::danger($ex->getMessage());*/
+private function login($data) {
+    try {
+        if (empty($data['email']) || empty($data['password'])) {
             return false;
-
         }
+        $user = \App\Models\User::getByLogin($data['email']);
+       
+if (!$user) {
+    var_dump('Utilisateur non trouvé');
+    exit;
+}
+if (Hash::generate($data['password'], $user['salt']) !== $user['password']) {
+    var_dump('Mot de passe incorrect');
+    var_dump('Password saisi:', $data['password']);
+var_dump('Salt utilisé:', $user['salt']);
+var_dump('Hash attendu:', $user['password']);
+var_dump('Hash calculé:', Hash::generate($data['password'], $user['salt']));
+
+    exit;
+}
+
+        if (!$user) return false;
+        if (Hash::generate($data['password'], $user['salt']) !== $user['password']) return false;
+
+       $_SESSION['user'] = [
+    'id' => $user['id'],
+    'username' => $user['username'],
+];
+
+
+        // Se souvenir de moi
+        if (!empty($data['remember_me'])) {
+            $token = bin2hex(random_bytes(32));
+            \App\Models\User::storeRememberToken($user['id'], $token);
+            setcookie('remember_me', $token, [
+                'expires' => time() + 3600 * 24 * 30,
+                'path' => '/',
+                'secure' => false,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+        }
+
+        // Force la sauvegarde de la session avant redirection (optionnel)
+        session_write_close();
+        return true;
+    } catch (Exception $ex) {
+        return false;
     }
+}
+
 
 
     /**
@@ -162,30 +169,33 @@ class User extends \Core\Controller
      * @return boolean
      * @since 1.0.2
      */
-public function logoutAction() {
-    // Supprimer le cookie "remember me"
-    if (isset($_COOKIE['remember_me'])) {
-        unset($_COOKIE['remember_me']);
-        setcookie('remember_me', '', time() - 3600, '/');
-        // Supprime aussi le token en base si besoin
-        // \App\Models\User::deleteRememberToken($_COOKIE['remember_me']);
-    }
+ public function logoutAction() {
 
-    $_SESSION = array();
-
-    if (ini_get("session.use_cookies")) {
-        $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-            $params["path"], $params["domain"],
-            $params["secure"], $params["httponly"]
-        );
-    }
-
-    session_destroy();
-
-    header ("Location: /");
-    return true;
+        // Delete the cookie if it exists.
+     if (Cookie::exists(Config::get("COOKIE_USER"))) {
+    Cookie::delete(Config::get("COOKIE_USER"));
 }
 
+        // Destroy all data registered to the session.
+        $_SESSION = array();
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params["path"],
+                $params["domain"],
+                $params["secure"],
+                $params["httponly"]
+            );
+        }
+
+        session_destroy();
+
+        header ("Location: /");
+
+        return true;
+    }
 
 }

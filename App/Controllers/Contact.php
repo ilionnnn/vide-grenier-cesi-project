@@ -1,35 +1,42 @@
 <?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Récupération des données du formulaire
-    $email = $_POST['email'] ?? '';
-    $message = $_POST['message'] ?? '';
-    $nom = $_POST['name'] ?? '';
+namespace App\Controllers;
 
-    // Validation simple des champs
-    if (filter_var($email, FILTER_VALIDATE_EMAIL) && !empty($message) && !empty($nom)) {
-        $to = 'destinataire@monsite.fr'; // Mets ici l'adresse du destinataire
-        $subject = 'Nouveau message depuis le formulaire de contact';
-        $headers = 'From: webmaster@monsite.fr' . "\r\n" .
-                   'Reply-To: ' . $email . "\r\n" .
-                   'Content-Type: text/plain; charset=utf-8';
+use \Core\View;
 
-        $body = "Nom: $nom\nEmail: $email\n\n$message";
+class Contact extends \Core\Controller
+{
+    public function indexAction()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $name = trim($_POST['name'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $message = trim($_POST['message'] ?? '');
 
-        // Envoi de l'email
-        $success = mail($to, $subject, $body, $headers);
+            if (filter_var($email, FILTER_VALIDATE_EMAIL) && $name && $message) {
+                $to = 'ilianmahzem@orange.fr'; 
+                $subject = 'Nouveau message depuis le formulaire de contact';
+                $headers = 'From: webmaster@monsite.fr' . "\r\n" .
+                           'Reply-To: ' . $email . "\r\n" .
+                           'Content-Type: text/plain; charset=utf-8';
 
-        if ($success) {
-            // Redirection vers une page de confirmation
-            header('Location: /merci');
-            exit;
+                $body = "Nom: $name\nEmail: $email\n\n$message";
+
+                if (mail($to, $subject, $body, $headers)) {
+                    header('Location: /merci');
+                    exit;
+                } else {
+                    $error = "Erreur lors de l'envoi du message.";
+                }
+            } else {
+                $error = "Veuillez remplir tous les champs correctement.";
+            }
+            // Affiche la vue avec l’erreur éventuelle
+            View::renderTemplate('Contact/index.html', ['error' => $error]);
         } else {
-            echo "Erreur lors de l'envoi du message.";
+            // Affiche le formulaire de contact si GET
+            View::renderTemplate('Contact/index.html');
         }
-    } else {
-        echo "Veuillez remplir tous les champs correctement.";
     }
-} else {
-    // Accès direct sans POST
-    echo "Accès non autorisé.";
 }
+
 ?>
