@@ -141,7 +141,6 @@ exit;
     'id' => $user['id'],
     'username' => $user['username'],
 ];
-var_dump($_SESSION); exit;
 
 
         // Se souvenir de moi
