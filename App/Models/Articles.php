@@ -6,7 +6,7 @@ use Core\Model;
 use App\Core;
 use DateTime;
 use Exception;
-use App\Helpers;
+use App\Helper;
 
 /**
  * Articles Model
