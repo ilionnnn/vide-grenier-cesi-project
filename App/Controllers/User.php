@@ -100,9 +100,8 @@ public function loginAction()
      */
 public function accountAction()
 {
-    var_dump($user, $articles); exit;
-
     $articles = Articles::getByUser($_SESSION['user']['id']);
+
     View::renderTemplate('User/account.html', [
         'articles' => $articles
     ]);
