@@ -1,5 +1,6 @@
 FROM php:8.2-apache
 
+# Installer les extensions PHP nécessaires (pdo, mysqli, etc.)
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -7,31 +8,19 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
     unzip \
-    nano \
     && docker-php-ext-install pdo pdo_mysql mysqli
 
+# Activer mod_rewrite pour Apache (utile pour les frameworks MVC)
 RUN a2enmod rewrite
 
-# Installer Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Copier le code source dans le conteneur
+COPY ../../src/ /var/www/html/
 
-# Copie d'abord composer.json et composer.lock pour le cache Docker
-COPY composer.json composer.lock /var/www/html/
+# Donner les bons droits (optionnel)
+RUN chown -R www-data:www-data /var/www/html
 
-WORKDIR /var/www/html
-
-# Installer les dépendances PHP AVANT de copier tout le code source (meilleur cache)
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
-
-# Copier le reste du code source
-COPY . /var/www/html/
-
-COPY docker/web/apache.conf /etc/apache2/sites-available/000-default.conf
-
-RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
-
-ENV COMPOSER_ALLOW_SUPERUSER=1
-
-RUN echo "DirectoryIndex index.php" >> /etc/apache2/apache2.conf
+# Configurer le DocumentRoot si besoin (optionnel)
+# ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+# RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
 EXPOSE 80

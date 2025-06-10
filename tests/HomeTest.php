@@ -13,7 +13,6 @@ class HomeViewTest extends TestCase
         // Assertion 1: Check if the CSS class "content-wrapper" exists
         $this->assertStringContainsString('class="content-wrapper"', $output);
 
-
         // Assertion 2: Check if the HTML contains a specific <ul> element
         $this->assertStringContainsString('<ul class="list-inline">', $output);
 
