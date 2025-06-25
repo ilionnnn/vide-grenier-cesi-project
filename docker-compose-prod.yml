@@ -1,22 +1,25 @@
+version: '3.9'
+
 services:
   php-apache:
     build:
       context: .
       dockerfile: docker/web/Dockerfile
+    container_name: php-apache-prod
     ports:
       - "8090:80"
     depends_on:
       - db
-    volumes:
-      - ./:/var/www
     networks:
       - monreseau
+    volumes:
+      - ./public:/var/www/html
 
   db:
     image: mariadb:10.5
+    container_name: mariadb-prod-3307
     ports:
-      - "3306:3306"
-    container_name: mariadb-dev
+      - "3307:3306"
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -24,13 +27,13 @@ services:
       MYSQL_USER: user_prod
       MYSQL_PASSWORD: pass_prod
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - mariadb_data_prod:/var/lib/mysql
     networks:
       - monreseau
 
   phpmyadmin:
     image: phpmyadmin
-    container_name: phpmyadmin-dev
+    container_name: phpmyadmin-prod
     restart: always
     ports:
       - "8092:80"
@@ -47,7 +50,7 @@ services:
       - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
 
 volumes:
-  mariadb_data:
+  mariadb_data_prod:
 
 networks:
   monreseau:
