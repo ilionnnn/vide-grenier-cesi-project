@@ -1,8 +1,11 @@
+version: '3.9'
+
 services:
   php-apache:
     build:
       context: .
       dockerfile: docker/web/Dockerfile
+    container_name: php-apache-dev
     ports:
       - "8081:80"
     depends_on:
@@ -10,23 +13,23 @@ services:
     volumes:
       - ./:/var/www
     networks:
-      - monreseau
+      - monreseau-dev
 
   db:
     image: mariadb:10.5
+    container_name: mariadb-dev
     ports:
       - "3306:3306"
-    container_name: mariadb-dev
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: mon_site
-      MYSQL_USER: user
-      MYSQL_PASSWORD: pass
+      MYSQL_DATABASE: mon_site_dev
+      MYSQL_USER: user_dev
+      MYSQL_PASSWORD: pass_dev
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - mariadb_data_dev:/var/lib/mysql
     networks:
-      - monreseau
+      - monreseau-dev
 
   phpmyadmin:
     image: phpmyadmin
@@ -41,13 +44,13 @@ services:
       - UPLOAD_LIMIT=32M
     depends_on:
       - db
-    networks:
-      - monreseau
     volumes:
       - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
+    networks:
+      - monreseau-dev
 
 volumes:
-  mariadb_data:
+  mariadb_data_dev:
 
 networks:
-  monreseau:
+  monreseau-dev:

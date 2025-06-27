@@ -10,14 +10,14 @@ services:
       - "8090:80"
     depends_on:
       - db
-    networks:
-      - monreseauprod
     volumes:
       - ./public:/var/www/html
+    networks:
+      - monreseau-prod
 
   db:
     image: mariadb:10.5
-    container_name: mariadb-prod-3307
+    container_name: mariadb-prod
     ports:
       - "3307:3306"
     restart: always
@@ -29,7 +29,7 @@ services:
     volumes:
       - mariadb_data_prod:/var/lib/mysql
     networks:
-      - monreseauprod
+      - monreseau-prod
 
   phpmyadmin:
     image: phpmyadmin
@@ -44,13 +44,13 @@ services:
       - UPLOAD_LIMIT=32M
     depends_on:
       - db
-    networks:
-      - monreseauprod
     volumes:
       - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
+    networks:
+      - monreseau-prod
 
 volumes:
   mariadb_data_prod:
 
 networks:
-  monreseauprod:
+  monreseau-prod:
