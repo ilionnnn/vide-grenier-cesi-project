@@ -17,7 +17,7 @@ services:
 
   db:
     image: mariadb:10.5
-    container_name: mariadb-prod-3307
+    container_name: mariadb-prod
     ports:
       - "3307:3306"
     restart: always
