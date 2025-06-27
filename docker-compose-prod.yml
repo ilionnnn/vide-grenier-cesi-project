@@ -11,7 +11,7 @@ services:
     depends_on:
       - db
     networks:
-      - monreseau
+      - monreseauprod
     volumes:
       - ./public:/var/www/html
 
@@ -29,7 +29,7 @@ services:
     volumes:
       - mariadb_data_prod:/var/lib/mysql
     networks:
-      - monreseau
+      - monreseauprod
 
   phpmyadmin:
     image: phpmyadmin
@@ -45,7 +45,7 @@ services:
     depends_on:
       - db
     networks:
-      - monreseau
+      - monreseauprod
     volumes:
       - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
 

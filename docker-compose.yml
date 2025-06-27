@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: docker/web/Dockerfile
     ports:
-      - "8090:80"
+      - "8081:80"
     depends_on:
       - db
     volumes:
@@ -20,9 +20,9 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: mon_site_prod
-      MYSQL_USER: user_prod
-      MYSQL_PASSWORD: pass_prod
+      MYSQL_DATABASE: mon_site
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
@@ -33,7 +33,7 @@ services:
     container_name: phpmyadmin-dev
     restart: always
     ports:
-      - "8092:80"
+      - "8082:80"
     environment:
       - PMA_HOST=db
       - PMA_PORT=3306
