@@ -53,4 +53,4 @@ volumes:
   mariadb_data_prod:
 
 networks:
-  monreseau:
+  monreseauprod:
