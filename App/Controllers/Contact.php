@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers;
 
 use \Core\View;
@@ -13,11 +14,11 @@ class Contact extends \Core\Controller
             $message = trim($_POST['message'] ?? '');
 
             if (filter_var($email, FILTER_VALIDATE_EMAIL) && $name && $message) {
-                $to = 'ilianmahzem@orange.fr'; 
+                $to = 'ilianmahzem@orange.fr';
                 $subject = 'Nouveau message depuis le formulaire de contact';
                 $headers = 'From: webmaster@monsite.fr' . "\r\n" .
-                           'Reply-To: ' . $email . "\r\n" .
-                           'Content-Type: text/plain; charset=utf-8';
+                    'Reply-To: ' . $email . "\r\n" .
+                    'Content-Type: text/plain; charset=utf-8';
 
                 $body = "Nom: $name\nEmail: $email\n\n$message";
 
@@ -30,13 +31,14 @@ class Contact extends \Core\Controller
             } else {
                 $error = "Veuillez remplir tous les champs correctement.";
             }
-            // Affiche la vue avec l’erreur éventuelle
             View::renderTemplate('Contact/index.html', ['error' => $error]);
         } else {
-            // Affiche le formulaire de contact si GET
             View::renderTemplate('Contact/index.html');
         }
     }
-}
 
-?>
+    public function merciAction()
+    {
+        View::renderTemplate('Contact/merci.html');
+    }
+}
