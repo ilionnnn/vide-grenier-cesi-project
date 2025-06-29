@@ -9,13 +9,19 @@ services:
     ports:
       - "8081:80"
     depends_on:
-      - db
+      - db-dev
+    restart: always
     volumes:
       - ./:/var/www
+    environment:
+      DB_HOST: db-dev
+      DB_NAME: mon_site_dev
+      DB_USER: user_dev
+      DB_PASSWORD: pass_dev
     networks:
       - monreseau-dev
 
-  db:
+  db-dev:
     image: mariadb:10.5
     container_name: mariadb-dev
     ports:
@@ -38,12 +44,12 @@ services:
     ports:
       - "8082:80"
     environment:
-      - PMA_HOST=db
+      - PMA_HOST=db-dev
       - PMA_PORT=3306
       - PMA_ARBITRARY=0
       - UPLOAD_LIMIT=32M
     depends_on:
-      - db
+      - db-dev
     volumes:
       - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
     networks:
