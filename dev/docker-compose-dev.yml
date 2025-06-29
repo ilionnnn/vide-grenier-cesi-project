@@ -3,7 +3,7 @@ version: '3.9'
 services:
   php-apache:
     build:
-      context: .
+      context: .. # Prend la racine du projet, comme en prod
       dockerfile: docker/web/Dockerfile
     container_name: php-apache-dev
     ports:
@@ -11,10 +11,13 @@ services:
     depends_on:
       - db
     volumes:
-      - ./:/var/www
+      - ../:/var/www
+    environment:
+      APP_ENV: dev
+       
     networks:
       - monreseau-dev
-
+      
   db:
     image: mariadb:10.5
     container_name: mariadb-dev
@@ -45,7 +48,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
+      - ../php.ini:/usr/local/etc/php/conf.d/uploads.ini
     networks:
       - monreseau-dev
 
@@ -54,3 +57,5 @@ volumes:
 
 networks:
   monreseau-dev:
+
+
