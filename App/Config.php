@@ -1,27 +1,45 @@
 <?php
-
 namespace App;
 
 class Config
 {
-    // Valeurs par défaut, fallback si variable d'env absente
-    const DB_HOST = 'db';
-    const DB_NAME = 'mon_site';
-    const DB_USER = 'user';
-    const DB_PASSWORD = 'pass';
-    const SHOW_ERRORS = true;
+    public const SHOW_ERRORS = true; // ou false selon le besoin
+
+    private static $environments = [
+        'dev' => [
+            'DB_HOST' => 'db',
+            'DB_NAME' => 'mon_site_dev',
+            'DB_USER' => 'user_dev',
+            'DB_PASSWORD' => 'pass_dev',
+            'SHOW_ERRORS' => true,
+        ],
+        'prod' => [
+            'DB_HOST' => 'db',
+            'DB_NAME' => 'mon_site_prod',
+            'DB_USER' => 'user_prod',
+            'DB_PASSWORD' => 'pass_prod',
+            'SHOW_ERRORS' => false,
+        ],
+    ];
+
     const COOKIE_USER = 'user';
     const COOKIE_DEFAULT_EXPIRY = 3600 * 24 * 30;
 
     public static function get($key)
     {
-        // Essaye d'abord de récupérer la variable d'environnement Docker correspondante
+        // 1. Vérifie d'abord les variables d'environnement
         $envValue = getenv($key);
         if ($envValue !== false) {
             return $envValue;
         }
 
-        // Sinon, retourne la constante définie dans la classe
+        // 2. Fallback sur la configuration statique
+        $env = getenv('APP_ENV') ?: 'dev';
+        if (isset(self::$environments[$env][$key])) {
+            return self::$environments[$env][$key];
+        }
+
+        // 3. Vérifie les constantes
         $const = __CLASS__ . '::' . $key;
         if (defined($const)) {
             return constant($const);
@@ -30,3 +48,5 @@ class Config
         return null;
     }
 }
+
+

@@ -3,25 +3,21 @@ version: '3.9'
 services:
   php-apache:
     build:
-      context: .
+      context: ..
       dockerfile: docker/web/Dockerfile
     container_name: php-apache-prod
     ports:
       - "8090:80"
     depends_on:
-      - db-prod
-    restart: always
+      - db
     volumes:
-      - ./public:/var/www/html
+      - ../:/var/www
     environment:
-      DB_HOST: db-prod
-      DB_NAME: mon_site_prod
-      DB_USER: user_prod
-      DB_PASSWORD: pass_prod
+      APP_ENV: prod
     networks:
       - monreseau-prod
 
-  db-prod:
+  db:
     image: mariadb:10.5
     container_name: mariadb-prod
     ports:
@@ -44,12 +40,12 @@ services:
     ports:
       - "8092:80"
     environment:
-      - PMA_HOST=db-prod
+      - PMA_HOST=db
       - PMA_PORT=3306
       - PMA_ARBITRARY=0
       - UPLOAD_LIMIT=32M
     depends_on:
-      - db-prod
+      - db
     volumes:
       - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
     networks:

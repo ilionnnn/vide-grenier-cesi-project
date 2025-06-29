@@ -3,25 +3,22 @@ version: '3.9'
 services:
   php-apache:
     build:
-      context: .
+      context: .. # Prend la racine du projet, comme en prod
       dockerfile: docker/web/Dockerfile
     container_name: php-apache-dev
     ports:
       - "8081:80"
     depends_on:
-      - db-dev
-    restart: always
+      - db
     volumes:
-      - ./:/var/www
+      - ../:/var/www
     environment:
-      DB_HOST: db-dev
-      DB_NAME: mon_site_dev
-      DB_USER: user_dev
-      DB_PASSWORD: pass_dev
+      APP_ENV: dev
+       
     networks:
       - monreseau-dev
-
-  db-dev:
+      
+  db:
     image: mariadb:10.5
     container_name: mariadb-dev
     ports:
@@ -44,14 +41,14 @@ services:
     ports:
       - "8082:80"
     environment:
-      - PMA_HOST=db-dev
+      - PMA_HOST=db
       - PMA_PORT=3306
       - PMA_ARBITRARY=0
       - UPLOAD_LIMIT=32M
     depends_on:
-      - db-dev
+      - db
     volumes:
-      - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
+      - ../php.ini:/usr/local/etc/php/conf.d/uploads.ini
     networks:
       - monreseau-dev
 
@@ -60,3 +57,5 @@ volumes:
 
 networks:
   monreseau-dev:
+
+
