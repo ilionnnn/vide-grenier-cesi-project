@@ -14,14 +14,9 @@ services:
       - ../:/var/www
     environment:
       APP_ENV: dev
-       
     networks:
       - monreseau-dev
-<<<<<<< HEAD:docker-compose.yml
-
-=======
       
->>>>>>> develop:dev/docker-compose-dev.yml
   db:
     image: mariadb:10.5
     container_name: mariadb-dev
@@ -52,11 +47,7 @@ services:
     depends_on:
       - db
     volumes:
-<<<<<<< HEAD:docker-compose.yml
-      - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
-=======
       - ../php.ini:/usr/local/etc/php/conf.d/uploads.ini
->>>>>>> develop:dev/docker-compose-dev.yml
     networks:
       - monreseau-dev
 
@@ -65,8 +56,5 @@ volumes:
 
 networks:
   monreseau-dev:
-<<<<<<< HEAD:docker-compose.yml
-=======
 
 
->>>>>>> develop:dev/docker-compose-dev.yml
