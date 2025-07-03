@@ -3,7 +3,7 @@ version: '3.9'
 services:
   php-apache:
     build:
-      context: .
+      context: ..
       dockerfile: docker/web/Dockerfile
     container_name: php-apache-prod
     ports:
@@ -11,7 +11,13 @@ services:
     depends_on:
       - db
     volumes:
+<<<<<<< HEAD:docker-compose-prod.yml
       - ./public:/var/www/html
+=======
+      - ../:/var/www
+    environment:
+      APP_ENV: prod
+>>>>>>> develop:prod/docker-compose-prod.yml
     networks:
       - monreseau-prod
 
